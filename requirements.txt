@@ -1,0 +1,14 @@
+openai
+cohere
+transformers
+numpy
+pandas
+langchain
+litellm
+pytest
+pytest-cov
+black
+flake8
+isort
+mypy
+doit

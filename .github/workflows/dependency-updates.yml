@@ -1,0 +1,81 @@
+name: Update Dependencies
+
+on:
+  schedule:
+    - cron: "0 */3 * * *"  # Runs every Sunday at 00:00 UTC; adjust as desired
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install pip-tools
+        run: |
+          pip install --upgrade pip
+          pip install pip-tools
+
+      - name: Compile dependencies
+        id: compile_deps
+        run: |
+          pip-compile --upgrade requirements.in
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          BRANCH_NAME="dep-updates-$(date +%Y%m%d_%H%M%S)"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH_NAME"
+          git add requirements.txt
+          git commit -m "chore: update dependencies"
+          git push origin "$BRANCH_NAME"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Pull Request
+        if: steps.check_changes.outputs.changes == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const branchName = "dep-updates-" + new Date().toISOString().replace(/[-:TZ.]/g,"").slice(0,14);
+            // Actually, we extracted the real branch name in the previous step, so let's just find it from the repo:
+            const { data: branches } = await github.rest.repos.listBranches({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            // Grab the dep-updates branch
+            const depBranch = branches.find(b => b.name.includes("dep-updates-"));
+            if (!depBranch) {
+              core.setFailed("No dep-updates branch found.");
+              return;
+            }
+            const response = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Dependency Updates (${new Date().toISOString().slice(0,10)})`,
+              head: depBranch.name,       // from the new branch
+              base: "main",               // your default branch
+              body: "Automated dependency updates via pip-compile.",
+              maintainer_can_modify: true
+            });
+            core.info(`Pull Request created: ${response.data.html_url}`);
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
