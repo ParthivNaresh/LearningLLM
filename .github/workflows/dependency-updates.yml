@@ -74,8 +74,32 @@ jobs:
               head: depBranch.name,       // from the new branch
               base: "main",               // your default branch
               body: "Automated dependency updates via pip-compile.",
-              maintainer_can_modify: true
+              maintainer_can_modify: true,
+              assignees: ["ParthivNaresh"]
             });
             core.info(`Pull Request created: ${response.data.html_url}`);
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Auto-merge the PR
+        if: steps.check_changes.outputs.changes == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prNumber = parseInt("${{ steps.create_pr.outputs.pr_number }}", 10);
+            if (!prNumber) {
+              core.setFailed("No pull request number found to merge.");
+              return;
+            }
+            
+            // Attempt to merge immediately using "merge", "squash", or "rebase"
+            await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              merge_method: "squash"
+            });
+            
+            core.info(`Pull request #${prNumber} merged automatically.`);
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
