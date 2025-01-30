@@ -2,7 +2,7 @@ name: Update Dependencies
 
 on:
   schedule:
-    - cron: "0 */3 * * *"  # Runs every Sunday at 00:00 UTC; adjust as desired
+    - cron: "0 */1 * * *"  # Runs every Sunday at 00:00 UTC; adjust as desired
   workflow_dispatch:
 
 jobs:
