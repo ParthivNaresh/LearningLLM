@@ -1,0 +1,91 @@
+[build-system]
+requires = [
+    "setuptools>=61.0",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "LearningLLM"
+version = "0.0.1"
+description = "Starter repo for multiple LLM providers, plus advanced features."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Parthiv Naresh", email = "parthivnaresh@gmail.com" }
+]
+keywords = ["llm", "ai", "openai", "cohere", "huggingface"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+requires-python = ">=3.8"
+
+dependencies = [
+    "openai>=0.27.0",
+    "cohere>=4.7.0",
+    "transformers>=4.30.2",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0",
+    "pytest-cov>=3.0",
+]
+dev = [
+    "black>=23.1.0",
+    "flake8>=6.0.0",
+    "isort>=5.12.0",
+    "mypy>=1.0.0",
+    "doit",
+]
+
+# ----------------------------
+#   Tool-Specific Sections
+# ----------------------------
+
+[tool.black]
+line-length = 88
+target-version = ["py38", "py39", "py310"]
+exclude = '''
+(\.git
+ | \.venv
+ | build
+ | dist
+)
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = [
+    "E203",
+    "W503"
+]
+exclude = [
+    "build",
+    "dist",
+    ".venv",
+]
+
+[tool.coverage.run]
+branch = true
+parallel = true
+source = [
+    "LearningLLM",
+    "providers",
+    "utils"
+]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
