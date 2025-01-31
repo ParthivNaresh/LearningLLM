@@ -81,8 +81,8 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `Dependency Updates (${new Date().toISOString().slice(0,10)})`,
-              head: depBranch.name,       // from the new branch
-              base: "main",               // your default branch
+              head: depBranch.name,
+              base: "main",
               body: "Automated dependency updates via pip-compile.",
               assignees: ["ParthivNaresh"]
             });
