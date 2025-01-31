@@ -120,7 +120,7 @@ langchain-core==0.3.33
     #   langchain-text-splitters
 langchain-text-splitters==0.3.5
     # via langchain
-langsmith==0.3.3
+langsmith==0.3.4
     # via
     #   langchain
     #   langchain-core
@@ -146,7 +146,7 @@ numpy==1.26.4
     #   langchain
     #   pandas
     #   transformers
-openai==1.60.2
+openai==1.61.0
     # via
     #   -r requirements.in
     #   litellm
