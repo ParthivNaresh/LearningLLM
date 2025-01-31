@@ -10,7 +10,7 @@ from transformers import (
 
 from .base import BaseProvider
 
-logger = logging.getLogger("my_app_logger")
+logger = logging.getLogger(__name__)
 
 
 class HuggingFaceProvider(BaseProvider):
@@ -23,37 +23,51 @@ class HuggingFaceProvider(BaseProvider):
         self,
         hf_token: Optional[str] = "",
         device: Optional[str] = None,
+        local_files_only: bool = False,
+        cache_dir: Optional[str] = None,
     ):
         """
         :param hf_token: Optional token for private models on Hugging Face Hub.
         :param device: Device identifier (e.g., "cpu", "cuda", "cuda:0"). If None, defaults to "cuda" if available.
+        :param local_files_only: If True, use local cached files and do not fetch from Hugging Face Hub.
+        :param cache_dir: Custom cache directory where models are stored locally.
         """
         super().__init__(model_name=None)
         self.hf_token = hf_token
         self.model = None
         self.tokenizer = None
+        self.local_files_only = local_files_only
+        self.cache_dir = cache_dir
 
         if device is None:
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
         else:
             self.device = device
 
-        if self.hf_token:
+        if self.hf_token and not self.local_files_only:
             try:
                 login(token=self.hf_token)
                 logger.info("Logged in to Hugging Face Hub with provided token.")
             except Exception as e:
                 logger.error(f"Could not log in with provided token: {e}")
 
-    def list_models(self) -> List[str]:
+    def list_models(
+        self, search_query: Optional[str] = None, limit: int = 10
+    ) -> List[str]:
         """
         Returns a list of popular or relevant models on Hugging Face Hub.
         By default, it just returns some top results. You can refine via filters if desired.
+
+        :param search_query: Optional keyword to filter models (e.g. "gpt2", "bert").
+        :param limit: Max number of model IDs to return.
+        :return: A list of model IDs.
         """
         try:
             logger.info("Retrieving list of public Hugging Face models...")
-            models = list_models(limit=10, token=self.hf_token)
-            model_ids = [model.modelId for model in models]
+            models_info = list_models(
+                search=search_query, limit=10, token=self.hf_token
+            )
+            model_ids = [m.modelId for m in models_info]
             logger.info(f"{len(model_ids)} models returned.")
             return model_ids
         except Exception as e:
@@ -64,18 +78,31 @@ class HuggingFaceProvider(BaseProvider):
         """
         Loads the specified model and tokenizer from the Hugging Face Hub.
         Moves them to the requested device (CPU/GPU).
+
+        :param model_name: The model identifier on the Hub (e.g. "gpt2") or a local path to model files.
         """
         try:
-            logger.info(f"Loading model '{model_name}' on device '{self.device}'...")
+            logger.info(
+                f"Loading model '{model_name}' on device '{self.device}', "
+                f"local_files_only={self.local_files_only}, cache_dir={self.cache_dir}"
+            )
             self.model_name = model_name
             self.tokenizer = AutoTokenizer.from_pretrained(
-                model_name, use_auth_token=self.hf_token
+                model_name,
+                use_auth_token=self.hf_token,
+                local_files_only=self.local_files_only,
+                cache_dir=self.cache_dir,
             )
+            logger.info(f"Loaded tokenizer {self.tokenizer}")
             self.model = AutoModelForCausalLM.from_pretrained(
-                model_name, use_auth_token=self.hf_token
+                model_name,
+                trust_remote_code=True,
+                use_auth_token=self.hf_token,
+                local_files_only=self.local_files_only,
+                cache_dir=self.cache_dir,
             )
             self.model.to(self.device)
-            logger.info(f"Successfully loaded {model_name}.")
+            logger.info(f"Successfully loaded {model_name} on {self.device}.")
         except Exception as e:
             logger.error(f"Failed to load model '{model_name}': {e}")
             self.model = None
@@ -84,10 +111,14 @@ class HuggingFaceProvider(BaseProvider):
     def generate(
         self,
         prompt: str,
-        max_new_tokens: int = 50,
+        max_new_tokens: int = 400,
         temperature: float = 0.7,
         do_sample: bool = True,
-    ) -> str:
+        top_k: Optional[int] = None,
+        top_p: Optional[float] = None,
+        repetition_penalty: Optional[float] = None,
+        num_return_sequences: int = 1,
+    ) -> List[str]:
         """
         Generates text from a given prompt. Minimal arguments for simplicity.
 
@@ -95,31 +126,60 @@ class HuggingFaceProvider(BaseProvider):
         :param max_new_tokens: Max tokens to generate (beyond the prompt length).
         :param temperature: Controls randomness in generation (higher -> more random).
         :param do_sample: If True, uses sampling. Otherwise, uses greedy decoding.
+        :param top_k: Top-k filtering for sampling (higher -> more diverse).
+        :param top_p: Nucleus sampling hyperparameter (fraction of tokens to consider).
+        :param repetition_penalty: Penalty for repeated tokens (1.0 means no penalty).
+        :param num_return_sequences: Number of distinct generated sequences to return.
         :return: Generated string (may include prompt + completion).
         """
-        if not self.model:
-            logger.error("No model is set. Call set_model(model_name) first.")
-            return ""
-
-        if not self.tokenizer:
-            logger.error("No tokenizer is set. Call set_model(model_name) first.")
-            return ""
+        if not self.model or not self.tokenizer:
+            logger.error("No model/tokenizer is set. Call set_model(model_name) first.")
+            return []
 
         try:
             input_ids = self.tokenizer(prompt, return_tensors="pt").input_ids.to(
                 self.device
             )
+            prompt_tokens = len(input_ids[0])
+            logger.info(
+                f"Generating text for prompt of length {prompt_tokens} tokens with model {self.model_name}."
+            )
+
             output_ids = self.model.generate(
                 input_ids,
                 max_new_tokens=max_new_tokens,
                 temperature=temperature,
                 do_sample=do_sample,
+                top_k=top_k,
+                top_p=top_p,
+                repetition_penalty=repetition_penalty,
+                num_return_sequences=num_return_sequences,
             )
-            generated_text = self.tokenizer.decode(
-                output_ids[0], skip_special_tokens=True
+
+            generated_texts = []
+            for seq_num, seq_ids in enumerate(output_ids, start=1):
+                gen_text = self.tokenizer.decode(seq_ids, skip_special_tokens=True)
+                generated_texts.append(gen_text)
+                logger.debug(f"Sequence {seq_num}/{num_return_sequences} generated.")
+
+            logger.info(
+                f"Generated {num_return_sequences} sequence(s) from {self.model_name}."
             )
-            logger.info(f"Generated response from {self.model_name}.")
-            return generated_text
+            return generated_texts
         except Exception as e:
             logger.error(f"Error during text generation: {e}")
-            return ""
+            return []
+
+    def count_tokens(self, text: str) -> int:
+        """
+        Returns the approximate number of tokens in the provided text
+        (requires a loaded tokenizer).
+
+        :param text: Any string to tokenize.
+        :return: Number of tokens.
+        """
+        if not self.tokenizer:
+            logger.warning("No tokenizer available. Call set_model(model_name) first.")
+            return 0
+        tokens = self.tokenizer(text, return_tensors="pt").input_ids[0]
+        return len(tokens)

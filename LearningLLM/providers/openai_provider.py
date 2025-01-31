@@ -1,8 +1,11 @@
+import logging
 from typing import List
 
 import openai
 
 from .base import BaseProvider
+
+logger = logging.getLogger(__name__)
 
 
 class OpenAIProvider(BaseProvider):

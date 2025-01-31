@@ -19,7 +19,7 @@ def setup_app_logger(name="my_app_logger", log_dir="logs", level=logging.INFO):
     log_file = os.path.join(log_dir, f"{name}_{timestamp}.log")
 
     formatter = logging.Formatter(
-        "[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s",
+        "[%(asctime)s] [%(filename)s] [%(levelname)s] %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 

@@ -45,6 +45,16 @@ def task_lint_fix():
     }
 
 
+def task_clear_logs():
+    """
+    Deletes all files under the 'tests/logs/' folder.
+    """
+    return {
+        "actions": ["rm -rf tests/logs/*"],
+        "verbosity": 2,
+    }
+
+
 # -----------------------------------------------------------------------------
 # Task: Test (Pytest)
 # -----------------------------------------------------------------------------

@@ -1,8 +1,11 @@
+import logging
 from typing import List
 
 import cohere
 
 from .base import BaseProvider
+
+logger = logging.getLogger(__name__)
 
 
 class CohereProvider(BaseProvider):
