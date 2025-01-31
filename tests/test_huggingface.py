@@ -39,10 +39,10 @@ def test_generate(hf_provider):
     """
     Verify text generation produces a non-empty string.
     """
-    model_name = "mistralai/Mistral-Small-24B-Instruct-2501"
+    model_name = "gpt2"
     hf_provider.set_model(model_name)
     prompt = "Is the world round?"
     output = hf_provider.generate(prompt=prompt, max_new_tokens=10)
-    print(output)
+
     assert isinstance(output, str), "generate() should return a string."
     assert len(output) > 0, "Generated text should not be empty."

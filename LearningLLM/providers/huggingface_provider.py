@@ -3,6 +3,7 @@ from typing import List, Optional
 
 import torch
 from huggingface_hub import list_models, login
+from openai import api_key
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -21,20 +22,16 @@ class HuggingFaceProvider(BaseProvider):
 
     def __init__(
         self,
-        hf_token: Optional[str] = "",
         device: Optional[str] = None,
         local_files_only: bool = False,
         cache_dir: Optional[str] = None,
     ):
         """
-        :param hf_token: Optional token for private models on Hugging Face Hub.
         :param device: Device identifier (e.g., "cpu", "cuda", "cuda:0"). If None, defaults to "cuda" if available.
         :param local_files_only: If True, use local cached files and do not fetch from Hugging Face Hub.
         :param cache_dir: Custom cache directory where models are stored locally.
         """
-        super().__init__(model_name=None)
-        self.hf_token = hf_token
-        self.model = None
+        super().__init__(api_key=api_key, model_name=None)
         self.tokenizer = None
         self.local_files_only = local_files_only
         self.cache_dir = cache_dir
@@ -44,9 +41,9 @@ class HuggingFaceProvider(BaseProvider):
         else:
             self.device = device
 
-        if self.hf_token and not self.local_files_only:
+        if self.api_key and not self.local_files_only:
             try:
-                login(token=self.hf_token)
+                login(token=self.api_key)
                 logger.info("Logged in to Hugging Face Hub with provided token.")
             except Exception as e:
                 logger.error(f"Could not log in with provided token: {e}")
@@ -65,7 +62,7 @@ class HuggingFaceProvider(BaseProvider):
         try:
             logger.info("Retrieving list of public Hugging Face models...")
             models_info = list_models(
-                search=search_query, limit=10, token=self.hf_token
+                search=search_query, limit=10, token=self.api_key
             )
             model_ids = [m.modelId for m in models_info]
             logger.info(f"{len(model_ids)} models returned.")
@@ -89,7 +86,7 @@ class HuggingFaceProvider(BaseProvider):
             self.model_name = model_name
             self.tokenizer = AutoTokenizer.from_pretrained(
                 model_name,
-                use_auth_token=self.hf_token,
+                use_auth_token=self.api_key,
                 local_files_only=self.local_files_only,
                 cache_dir=self.cache_dir,
             )
@@ -97,7 +94,7 @@ class HuggingFaceProvider(BaseProvider):
             self.model = AutoModelForCausalLM.from_pretrained(
                 model_name,
                 trust_remote_code=True,
-                use_auth_token=self.hf_token,
+                use_auth_token=self.api_key,
                 local_files_only=self.local_files_only,
                 cache_dir=self.cache_dir,
             )
@@ -111,14 +108,14 @@ class HuggingFaceProvider(BaseProvider):
     def generate(
         self,
         prompt: str,
-        max_new_tokens: int = 400,
+        max_new_tokens: int = 256,
         temperature: float = 0.7,
         do_sample: bool = True,
         top_k: Optional[int] = None,
-        top_p: Optional[float] = None,
-        repetition_penalty: Optional[float] = None,
+        top_p: Optional[float] = 0.95,
+        repetition_penalty: Optional[float] = 1.5,
         num_return_sequences: int = 1,
-    ) -> List[str]:
+    ) -> str:
         """
         Generates text from a given prompt. Minimal arguments for simplicity.
 
@@ -130,17 +127,17 @@ class HuggingFaceProvider(BaseProvider):
         :param top_p: Nucleus sampling hyperparameter (fraction of tokens to consider).
         :param repetition_penalty: Penalty for repeated tokens (1.0 means no penalty).
         :param num_return_sequences: Number of distinct generated sequences to return.
-        :return: Generated string (may include prompt + completion).
+        :return: Generated string.
         """
         if not self.model or not self.tokenizer:
             logger.error("No model/tokenizer is set. Call set_model(model_name) first.")
-            return []
+            return ""
 
         try:
             input_ids = self.tokenizer(prompt, return_tensors="pt").input_ids.to(
                 self.device
             )
-            prompt_tokens = len(input_ids[0])
+            prompt_tokens = input_ids.shape[1]
             logger.info(
                 f"Generating text for prompt of length {prompt_tokens} tokens with model {self.model_name}."
             )
@@ -158,17 +155,18 @@ class HuggingFaceProvider(BaseProvider):
 
             generated_texts = []
             for seq_num, seq_ids in enumerate(output_ids, start=1):
-                gen_text = self.tokenizer.decode(seq_ids, skip_special_tokens=True)
+                new_tokens = seq_ids[prompt_tokens:]
+                gen_text = self.tokenizer.decode(new_tokens, skip_special_tokens=True)
                 generated_texts.append(gen_text)
                 logger.debug(f"Sequence {seq_num}/{num_return_sequences} generated.")
 
             logger.info(
                 f"Generated {num_return_sequences} sequence(s) from {self.model_name}."
             )
-            return generated_texts
+            return " ".join(generated_texts)
         except Exception as e:
             logger.error(f"Error during text generation: {e}")
-            return []
+            return ""
 
     def count_tokens(self, text: str) -> int:
         """
