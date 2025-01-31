@@ -13,7 +13,10 @@ permissions:
 jobs:
   update-dependencies:
     runs-on: ubuntu-latest
-    permissions: write-all
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v3
         with:
@@ -81,7 +84,6 @@ jobs:
               head: depBranch.name,       // from the new branch
               base: "main",               // your default branch
               body: "Automated dependency updates via pip-compile.",
-              maintainer_can_modify: true,
               assignees: ["ParthivNaresh"]
             });
             const prNumber = response.data.number;
