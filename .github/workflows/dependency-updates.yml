@@ -5,6 +5,9 @@ on:
     - cron: "0 */1 * * *"  # Runs every Sunday at 00:00 UTC; adjust as desired
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   update-dependencies:
     runs-on: ubuntu-latest
