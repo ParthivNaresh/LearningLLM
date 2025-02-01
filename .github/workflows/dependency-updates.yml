@@ -37,64 +37,34 @@ jobs:
         run: |
           pip-compile --upgrade requirements.in
 
-      - name: Check for changes
-        id: check_changes
-        run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            echo "changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "changes=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Commit and push changes
-        if: steps.check_changes.outputs.changes == 'true'
-        run: |
-          BRANCH_NAME="dep-updates-$(date +%Y%m%d_%H%M%S)"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$BRANCH_NAME"
-          git add requirements.txt
-          git commit -m "chore: update dependencies"
-          git push origin "$BRANCH_NAME"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create Pull Request
-        if: steps.check_changes.outputs.changes == 'true'
+      - name: Create or Update Pull Request
         id: create_pr
-        uses: peter-evans/create-pull-request@v7.0.6
+        uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: Update latest dependencies
-          title: Automated Latest Dependency Updates
-          author: ParthivNaresh <parthivnaresh@gmail.com>
+          commit-message: "chore: update dependencies"
+          author: "ParthivNaresh <parthivnaresh@gmail.com>"
+          title: "Automated Latest Dependency Updates"
           body: "This is an auto-generated PR with the latest dependency updates."
-          branch: latest-dep-update
-          branch-suffix: short-commit-hash
-          delete-branch: true
-          base: main
-          assignees: ParthivNaresh
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          branch: "latest-dep-update"
+          branch-suffix: "short-commit-hash"
+          base: "main"
+          add-paths: |
+            requirements.txt
+          assignees: "ParthivNaresh"
 
       - name: Auto-merge the PR
-        if: steps.check_changes.outputs.changes == 'true'
+        if: steps.create_pr.outputs.pull-request-operation != 'none'
         uses: actions/github-script@v6
         with:
           script: |
             const prNumber = parseInt("${{ steps.create_pr.outputs.pr_number }}", 10);
-            if (!prNumber) {
-              core.setFailed("No pull request number found to merge.");
-              return;
-            }
-            
             await github.rest.pulls.merge({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: prNumber,
               merge_method: "squash"
             });
-            
             core.info(`Pull request #${prNumber} merged automatically.`);
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
