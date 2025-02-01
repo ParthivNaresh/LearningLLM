@@ -2,7 +2,7 @@ name: Update Dependencies
 
 on:
   schedule:
-    - cron: "0 */1 * * *"  # Runs every Sunday at 00:00 UTC; adjust as desired
+    - cron: "*/30 * * * *"  # Runs every Sunday at 00:00 UTC; adjust as desired
   workflow_dispatch:
 
 permissions:
@@ -62,33 +62,18 @@ jobs:
       - name: Create Pull Request
         if: steps.check_changes.outputs.changes == 'true'
         id: create_pr
-        uses: actions/github-script@v6
+        uses: peter-evans/create-pull-request@v7.0.6
         with:
-          script: |
-            const branchName = "dep-updates-" + new Date().toISOString().replace(/[-:TZ.]/g,"").slice(0,14);
-            // Actually, we extracted the real branch name in the previous step, so let's just find it from the repo:
-            const { data: branches } = await github.rest.repos.listBranches({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            });
-            // Grab the dep-updates branch
-            const depBranch = branches.find(b => b.name.includes("dep-updates-"));
-            if (!depBranch) {
-              core.setFailed("No dep-updates branch found.");
-              return;
-            }
-            const response = await github.rest.pulls.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `Dependency Updates (${new Date().toISOString().slice(0,10)})`,
-              head: depBranch.name,
-              base: "main",
-              body: "Automated dependency updates via pip-compile.",
-              assignees: ["ParthivNaresh"]
-            });
-            const prNumber = response.data.number;
-            core.setOutput("pr_number", prNumber);
-            core.info(`Pull Request created: ${response.data.html_url}`);
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Update latest dependencies
+          title: Automated Latest Dependency Updates
+          author: ParthivNaresh <parthivnaresh@gmail.com>
+          body: "This is an auto-generated PR with the latest dependency updates."
+          branch: latest-dep-update
+          branch-suffix: short-commit-hash
+          delete-branch: true
+          base: main
+          assignees: ParthivNaresh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
