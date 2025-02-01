@@ -58,7 +58,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const prNumber = parseInt("${{ steps.create_pr.outputs.pr_number }}", 10);
+            const prNumber = parseInt("${{ steps.create_pr.outputs.pull-request-number }}", 10);
             await github.rest.pulls.merge({
               owner: context.repo.owner,
               repo: context.repo.repo,
