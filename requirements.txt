@@ -124,7 +124,7 @@ langsmith==0.3.4
     # via
     #   langchain
     #   langchain-core
-litellm==1.59.12
+litellm==1.60.0
     # via -r requirements.in
 markupsafe==3.0.2
     # via jinja2
