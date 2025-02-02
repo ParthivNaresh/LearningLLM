@@ -41,7 +41,8 @@ def test_generate(hf_provider):
     """
     model_name = "gpt2"
     hf_provider.set_model(model_name)
-    prompt = "Hello, how are you?"
+    prompt = "Is the world round?"
     output = hf_provider.generate(prompt=prompt, max_new_tokens=10)
+
     assert isinstance(output, str), "generate() should return a string."
     assert len(output) > 0, "Generated text should not be empty."
