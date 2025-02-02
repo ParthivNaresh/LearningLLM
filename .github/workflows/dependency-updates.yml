@@ -41,9 +41,10 @@ jobs:
         id: create_pr
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.ACTIONS_PAT }}
           commit-message: "chore: update dependencies"
-          author: "ParthivNaresh <parthivnaresh@gmail.com>"
+          author: "ParthivNaresh <parthiv.naresh@alteryx.com>"
+          committer: "ParthivNaresh <parthiv.naresh@alteryx.com>"
           title: "Automated Latest Dependency Updates"
           body: "This is an auto-generated PR with the latest dependency updates."
           branch: "latest-dep-update"
@@ -67,4 +68,4 @@ jobs:
             });
             core.info(`Pull request #${prNumber} merged automatically.`);
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_PAT }}
