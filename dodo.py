@@ -1,16 +1,31 @@
 # dodo.py
-import os
 
 
 # -----------------------------------------------------------------------------
 # Task: Install Requirements
 # -----------------------------------------------------------------------------
-def task_install_requirements():
+def task_install():
     """
-    Installs packages from requirements.txt.
+    Updates and installs packages from requirements.txt.
     """
     return {
-        "actions": ["pip install -r requirements.txt"],
+        "actions": [
+            "pip-compile --upgrade requirements.in",
+            "pip install -r requirements.txt",
+        ],
+        "verbosity": 2,
+    }
+
+
+def task_install_test():
+    """
+    Updates and installs packages from requirements-test.txt.
+    """
+    return {
+        "actions": [
+            "pip-compile --upgrade requirements-test.in",
+            "pip install -r requirements-test.txt",
+        ],
         "verbosity": 2,
     }
 
@@ -20,7 +35,7 @@ def task_install_requirements():
 # -----------------------------------------------------------------------------
 def task_lint():
     """
-    Lint code with Black, Flake8, and isort (assuming they're in dev deps).
+    Lint code with Black, Flake8, and isort.
     """
     return {
         "actions": [
@@ -34,7 +49,7 @@ def task_lint():
 
 def task_lint_fix():
     """
-    Lint code with Black, Flake8, and isort (assuming they're in dev deps).
+    Fix code with Black and isort.
     """
     return {
         "actions": [

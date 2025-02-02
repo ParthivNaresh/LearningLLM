@@ -1,6 +1,9 @@
+import importlib
 import logging
 import os
 from datetime import datetime
+
+from utils.constants import PROVIDER_MAP
 
 
 def setup_app_logger(name="my_app_logger", log_dir="logs", level=logging.INFO):
@@ -36,3 +39,10 @@ def setup_app_logger(name="my_app_logger", log_dir="logs", level=logging.INFO):
     logger.info(f"Logging to {log_file} (level={logging.getLevelName(level)})")
 
     return logger
+
+
+def load_chat_provider(provider_key: str):
+    cleaned_provider_key = provider_key.lower().strip()
+    module_name, class_name = PROVIDER_MAP[cleaned_provider_key]
+    mod = importlib.import_module(module_name)
+    return getattr(mod, class_name)
