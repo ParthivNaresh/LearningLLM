@@ -1,2 +1,0 @@
-[2025-02-02 16:07:15] [root] [INFO] Pytest logging configured. Writing logs to: logs/test_session_20250202_160715.log
-[2025-02-02 16:07:19] [root] [INFO] End of Pytest session. Shutting down logging.

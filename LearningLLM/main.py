@@ -1,6 +1,6 @@
 import logging
 
-from utils import setup_app_logger
+from utils.logger import setup_app_logger
 
 
 def main():

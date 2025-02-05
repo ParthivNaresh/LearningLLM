@@ -5,15 +5,13 @@ transformers
 numpy
 pandas
 pypdf
+fastapi
 
 langchain-core
 langchain
 langgraph
 langchain-community
 langchain-openai
-langchain-google-vertexai
-langchain-aws
-langchain-anthropic
 langchain-cohere
 langchain-huggingface
 langchain-groq

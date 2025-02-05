@@ -17,10 +17,9 @@ langchain-groq
 langchain-mistralai
 langchain-deepseek-official
 langchain-ollama
-langchain-ai21
+langchain-xai
 langchain-upstage
 langchain-ibm
-langchain-xai
 
 pytest
 pytest-cov
