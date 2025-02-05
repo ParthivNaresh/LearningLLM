@@ -1,0 +1,14 @@
+[2025-02-02 17:04:10] [conftest.py] [INFO] Pytest logging configured. Writing logs to: logs/test_session_20250202_170410.log
+[2025-02-02 17:04:10] [huggingface_provider.py] [INFO] Retrieving list of public Hugging Face models...
+[2025-02-02 17:04:11] [huggingface_provider.py] [INFO] 10 models returned.
+[2025-02-02 17:04:11] [huggingface_provider.py] [INFO] Loading model 'gpt2' on device 'cpu', local_files_only=False, cache_dir=None
+[2025-02-02 17:04:11] [huggingface_provider.py] [INFO] Loaded tokenizer GPT2TokenizerFast(name_or_path='gpt2', vocab_size=50257, model_max_length=1024, is_fast=True, padding_side='right', truncation_side='right', special_tokens={'bos_token': '<|endoftext|>', 'eos_token': '<|endoftext|>', 'unk_token': '<|endoftext|>'}, clean_up_tokenization_spaces=True),  added_tokens_decoder={
+	50256: AddedToken("<|endoftext|>", rstrip=False, lstrip=False, single_word=False, normalized=True, special=True),
+}
+[2025-02-02 17:04:11] [huggingface_provider.py] [INFO] Successfully loaded gpt2 on cpu.
+[2025-02-02 17:04:11] [huggingface_provider.py] [INFO] Loading model 'gpt2' on device 'cpu', local_files_only=False, cache_dir=None
+[2025-02-02 17:04:12] [huggingface_provider.py] [INFO] Loaded tokenizer GPT2TokenizerFast(name_or_path='gpt2', vocab_size=50257, model_max_length=1024, is_fast=True, padding_side='right', truncation_side='right', special_tokens={'bos_token': '<|endoftext|>', 'eos_token': '<|endoftext|>', 'unk_token': '<|endoftext|>'}, clean_up_tokenization_spaces=True),  added_tokens_decoder={
+	50256: AddedToken("<|endoftext|>", rstrip=False, lstrip=False, single_word=False, normalized=True, special=True),
+}
+[2025-02-02 17:04:12] [huggingface_provider.py] [INFO] Successfully loaded gpt2 on cpu.
+[2025-02-02 17:04:12] [huggingface_provider.py] [INFO] Generating text for prompt of length 5 tokens with model gpt2.

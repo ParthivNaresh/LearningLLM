@@ -11,6 +11,7 @@ class BaseProvider(ABC):
     def __init__(self, api_key: Optional[str] = None, model_name: Optional[str] = None):
         self.api_key = api_key
         self.model_name = model_name
+        self.model = None
 
     @abstractmethod
     def list_models(self) -> List[str]:
