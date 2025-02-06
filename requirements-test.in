@@ -1,0 +1,25 @@
+# requirements-test.in
+langchain-core
+langchain
+langchain-community
+langchain-openai
+langchain-google-vertexai
+langchain-aws
+langchain-anthropic
+langchain_nvidia_ai_endpoints
+langchain-cohere
+langchain-huggingface
+databricks_langchain
+langchain-fireworks
+langchain-together
+langchain-google-genai
+langchain-groq
+langchain-mistralai
+langchain-deepseek-official
+langchain-ollama
+langchain-xai
+langchain-upstage
+langchain-ibm
+
+pytest
+pytest-cov

@@ -4,8 +4,19 @@ cohere
 transformers
 numpy
 pandas
+pypdf
+fastapi
+
+langchain-core
 langchain
-litellm
+langgraph
+langchain-community
+langchain-openai
+langchain-cohere
+langchain-huggingface
+langchain-groq
+langchain-mistralai
+langchain-deepseek-official
 
 pytest
 pytest-cov

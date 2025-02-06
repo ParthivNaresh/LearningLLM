@@ -1,26 +1,26 @@
 import os
 import pytest
-from LearningLLM.providers.openai_provider import OpenAIProvider
+from providers.google_provider import GoogleProvider
 
 
 @pytest.fixture(scope="module")
-def openai_provider():
+def google_provider():
     """
     Pytest fixture to instantiate the provider once for all tests.
     If no API key is found, we skip these tests.
     """
-    api_key = ""
+    api_key = "AIzaSyC-GnPTeNEZv8fzLRQPxjrnUo3faClGKdQ"
     if not api_key:
-        pytest.skip("No OPENAI_API_KEY set. Skipping OpenAIProvider tests.")
-    provider = OpenAIProvider(api_key=api_key, model_name="gpt-3.5-turbo")
+        pytest.skip("No Google set. Skipping GoogleProvider tests.")
+    provider = GoogleProvider(project_id="learningllmpn")
     return provider
 
 
-def test_list_models(openai_provider):
+def test_list_models(google_provider):
     """
     Verify that list_models returns a list of model IDs (strings).
     """
-    model_ids = openai_provider.list_models()
+    model_ids = google_provider.list_models()
     assert isinstance(model_ids, list), "list_models() should return a list."
     if len(model_ids) > 0:
         assert isinstance(model_ids[0], str), "Each model ID should be a string."
