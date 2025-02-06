@@ -30,7 +30,10 @@ async def list_available_models(provider: str, api_key: str):
         try:
             response = await client.get(url, headers=headers, timeout=10.0)
             if response.status_code == 200:
-                return [model["id"] for model in response.json().get("data", [])]
+                if provider != "huggingface":
+                    return [model["id"] for model in response.json().get("data", [])]
+                else:
+                    return [model["id"] for model in response.json()]
             else:
                 return [f"Error fetching {provider}: {response.status_code}"]
         except Exception as e:
@@ -112,7 +115,7 @@ class API:
         response_dict = dict(result_data)
 
         return GenerateResponse(
-            content=response_dict.get("content", "This is a sample mock response!"),
+            content=response_dict.get("content", f"This is a sample mock response from the prompt '{request.prompt}'"),
             response_metadata=response_dict.get("response_metadata"),
             type=response_dict.get("type", ""),
             name=response_dict.get("name"),
